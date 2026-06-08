@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus AI — Nexus AI</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{
+  --bg:#030508;--surface:#080c14;--card:#0c1220;
+  --border:rgba(56,189,248,.1);--border2:rgba(56,189,248,.22);
+  --blue:#38bdf8;--green:#4ade80;--yellow:#fbbf24;
+  --red:#f87171;--purple:#a78bfa;--pink:#f472b6;--orange:#fb923c;
+  --text:#e2e8f0;--muted:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'Cairo',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{font-size:14px;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* ── PRINT ── */
+@media print{
+  #help-bot-btn,#help-bot-panel,.nav-tabs,#report-actions,#report-chat,#log-section,#provider-section,#task-section,#flow-section,#progress-bar-wrap,#header,.site-footer{display:none!important;}
+  body{background:#fff;color:#000;}
+  #report-section{display:block!important;border:none;box-shadow:none;}
+  #report-body{color:#000;}
+  #report-body h3{color:#1a56db;}
+}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-card{background:var(--card);border:1px solid var(--border2);padding:24px 28px 28px;border-radius:16px;width:100%;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:center;}
+.login-card h2{margin-bottom:6px;font-weight:900;color:var(--blue);}
+.login-card .sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.login-field{margin-bottom:13px;text-align:right;}
+.login-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-family:var(--mono);}
+.login-field input{width:100%;background:#050810;border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);outline:none;font-size:14px;transition:border .2s;}
+.login-field input:focus{border-color:var(--blue);}
+.login-btn{width:100%;background:var(--blue);color:#000;border:none;padding:12px;border-radius:10px;font-weight:900;cursor:pointer;transition:.2s;margin-top:8px;font-size:15px;font-family:var(--sans);}
+.login-btn:hover{filter:brightness(1.12);}
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.auth-tab{flex:1;padding:9px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);background:rgba(255,255,255,.02);transition:all .2s;font-family:var(--sans);}
+.auth-tab.active{background:var(--blue);color:#000;}
+#user-badge{font-size:11px;font-family:var(--mono);color:var(--green);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+#user-badge:hover{background:rgba(74,222,128,.14);}
+#user-badge.is-admin{color:var(--purple);background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2);}
+.users-table{width:100%;border-collapse:collapse;text-align:right;font-size:12px;}
+.users-table th{color:var(--muted);padding:8px;border-bottom:1px solid var(--border);}
+.users-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.02);}
+.del-user-btn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:10px;}
+
+/* ── NAV ── */
+.nav-tabs{display:flex;background:#050810;border-bottom:1px solid var(--border);padding:0 16px;gap:6px;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:11px 18px;color:var(--muted);cursor:pointer;font-weight:700;border-bottom:2px solid transparent;transition:.2s;font-size:12px;white-space:nowrap;flex-shrink:0;}
+.nav-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.nav-tab.locked{color:var(--muted);cursor:default;opacity:.5;}
+.app-page{display:none;}
+.app-page.active{display:block;}
+
+/* ── HEADER ── */
+#header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:rgba(8,12,20,.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.header-title{font-size:14px;font-weight:900;line-height:1.2;}
+.header-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:auto;box-shadow:0 0 8px var(--green);animation:blink 2s ease-in-out infinite;}
+.call-badge{font-size:10px;font-family:var(--mono);color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:3px 8px;border-radius:20px;white-space:nowrap;}
+@keyframes blink{50%{opacity:.4;box-shadow:none;}}
+
+/* ── PROVIDER ── */
+#provider-section{margin:12px;background:var(--card);border-radius:14px;border:1px solid var(--border);padding:12px 14px;transition:border-color .3s;}
+.provider-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;direction:ltr;}
+.provider-row::-webkit-scrollbar{display:none;}
+.provider-pill{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;white-space:nowrap;font-size:11px;font-weight:700;color:var(--muted);transition:all .2s;flex-shrink:0;font-family:var(--sans);}
+.provider-pill.active{color:var(--pcolor,var(--blue));border-color:var(--pcolor,var(--blue));background:rgba(var(--prgb,56,189,248),.09);box-shadow:0 0 8px rgba(var(--prgb,56,189,248),.2);}
+.ppill-icon{font-size:12px;}
+.mk-row{display:flex;gap:8px;align-items:flex-end;margin-top:10px;}
+.mk-group{display:flex;flex-direction:column;gap:4px;}
+.mk-group.grow{flex:1;}
+.mini-label{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;}
+.model-select{background:#050810;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer;width:100%;transition:border .2s;}
+.model-select:focus{border-color:var(--blue);}
+.model-select option{background:#0c1220;}
+#api-key{width:100%;background:#050810;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;transition:border .2s;}
+#api-key:focus{border-color:var(--blue);}
+#api-key::placeholder{color:var(--muted);}
+.key-wrap{position:relative;display:flex;align-items:center;}
+.key-wrap #api-key{padding-left:30px;}
+.key-eye{position:absolute;left:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;line-height:1;}
+#custom-fields{display:none;flex-direction:column;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.custom-input{background:#050810;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;width:100%;transition:border .2s;}
+.custom-input:focus{border-color:var(--purple);}
+.custom-input::placeholder{color:var(--muted);}
+.format-row{display:flex;gap:6px;flex-wrap:wrap;}
+.fmt-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--mono);transition:all .2s;}
+.fmt-btn.active{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.08);}
+.provider-note{margin:-4px 12px 10px;font-size:10px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(251,191,36,.03);border:1px solid rgba(251,191,36,.1);border-radius:8px;}
+.provider-note-left{display:flex;align-items:center;gap:6px;}
+
+/* ── TASK ── */
+#task-section{margin:0 12px 12px;background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+#task-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+#task-header .label{font-size:10px;font-family:var(--mono);color:var(--blue);}
+#task-input{width:100%;background:transparent;border:none;padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:14px;resize:none;outline:none;min-height:72px;}
+#task-input::placeholder{color:var(--muted);}
+#task-char-counter{font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 14px 6px;text-align:left;}
+#task-footer{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.dept-toggles{display:flex;gap:5px;flex-wrap:wrap;}
+.dept-tag{padding:4px 9px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;cursor:pointer;transition:all .2s;opacity:.4;font-family:var(--mono);}
+.dept-tag.on{opacity:1;}
+#run-btn{background:var(--blue);color:#000;border:none;border-radius:10px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:900;cursor:pointer;transition:filter .2s,transform .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+#run-btn:hover{filter:brightness(1.15);}
+#run-btn:active{transform:scale(.95);}
+#run-btn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+
+/* ── PROGRESS ── */
+#progress-bar-wrap{margin:0 12px 12px;height:3px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;display:none;}
+#progress-bar-fill{height:100%;width:0%;background:var(--blue);box-shadow:0 0 8px var(--blue);transition:width .5s ease;}
+
+/* ── FLOW ── */
+#flow-section{margin:0 12px 12px;}
+.flow-title{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:10px;letter-spacing:2px;}
+#orch-node{background:linear-gradient(135deg,rgba(56,189,248,.09),rgba(167,139,250,.05));border:1px solid rgba(56,189,248,.26);border-radius:14px;padding:12px 15px;display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.node-icon{font-size:20px;}
+.node-name{font-size:13px;font-weight:900;}
+.node-role{font-size:9px;color:var(--muted);font-family:var(--mono);}
+.node-status{margin-right:auto;font-size:9px;font-family:var(--mono);padding:3px 9px;border-radius:20px;border:1px solid;transition:all .3s;}
+.ns-idle{color:var(--muted);border-color:var(--muted);}
+.ns-think{color:var(--yellow);border-color:var(--yellow);animation:ns-pulse .9s ease-in-out infinite;}
+.ns-done{color:var(--green);border-color:var(--green);}
+.ns-error{color:var(--red);border-color:var(--red);}
+@keyframes ns-pulse{50%{opacity:.45;}}
+.connector{width:2px;height:12px;background:var(--border2);margin:0 auto 6px;position:relative;}
+.connector::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--border2);}
+#depts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
+.dept-node{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 12px;transition:border .3s,box-shadow .3s;}
+.dept-node.active-dept{border-color:var(--dcolor);box-shadow:0 0 14px rgba(var(--drgb),.14);}
+.dept-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.dept-icon{font-size:15px;}
+.dept-title{font-size:11px;font-weight:700;flex:1;}
+.dept-status{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:20px;border:1px solid;transition:all .3s;}
+.sub-agents{display:flex;flex-direction:column;gap:3px;}
+.sub-agent{background:rgba(255,255,255,.02);border-radius:7px;padding:5px 9px;display:flex;align-items:flex-start;gap:7px;border:1px solid transparent;transition:all .22s;font-size:11px;}
+.sub-agent.running{border-color:rgba(var(--drgb),.28);background:rgba(var(--drgb),.04);}
+.sub-agent.done{border-color:rgba(74,222,128,.18);background:rgba(74,222,128,.02);}
+.sa-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;margin-top:4px;transition:all .3s;}
+.sub-agent.running .sa-dot{background:var(--dcolor);box-shadow:0 0 5px var(--dcolor);animation:blink .7s ease-in-out infinite;}
+.sub-agent.done .sa-dot{background:var(--green);}
+.sa-name{color:var(--text);flex:1;line-height:1.3;}
+.sa-out{color:var(--muted);font-size:9px;font-family:var(--mono);display:none;margin-top:3px;line-height:1.5;}
+.sub-agent.done .sa-out{display:block;}
+
+/* ── REPORT ── */
+#report-section{margin:0 12px 18px;background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;display:none;}
+#report-section.show{display:block;}
+#report-header{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+#report-header .badge{background:var(--green);color:#000;font-size:10px;font-weight:900;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
+#report-body{padding:14px;font-size:13px;line-height:1.8;}
+#report-body h3{font-size:11px;font-family:var(--mono);color:var(--blue);margin:14px 0 6px;letter-spacing:1px;}
+#report-body h3:first-child{margin-top:0;}
+#report-body p{color:rgba(226,232,240,.8);margin-bottom:8px;}
+#report-body ul{padding-right:16px;color:rgba(226,232,240,.75);}
+#report-body li{margin-bottom:4px;}
+#report-body strong{color:var(--text);}
+
+/* ── REPORT ACTIONS BAR (NEW) ── */
+#report-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.015);}
+.action-btn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-size:11px;font-weight:700;font-family:var(--sans);transition:all .2s;white-space:nowrap;}
+.action-btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(56,189,248,.06);}
+.action-btn.pdf-btn:hover{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.06);}
+.action-btn.print-btn:hover{border-color:var(--muted);color:var(--text);}
+.action-btn.email-btn:hover{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.06);}
+.action-btn.save-btn:hover{border-color:var(--yellow);color:var(--yellow);background:rgba(251,191,36,.06);}
+.action-btn.share-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.06);}
+.action-btn.compare-btn:hover{border-color:var(--orange);color:var(--orange);background:rgba(251,146,60,.06);}
+.action-btn.saved-indicator{border-color:var(--green)!important;color:var(--green)!important;background:rgba(74,222,128,.08)!important;}
+
+/* ── REPORT CHAT ── */
+#report-chat{border-top:1px solid var(--border);padding:14px;}
+.chat-title{font-size:10px;font-family:var(--mono);color:var(--purple);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.chat-title::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--purple);box-shadow:0 0 6px var(--purple);}
+#chat-messages{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-bottom:10px;}
+.chat-msg{padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.6;max-width:90%;}
+.chat-msg.user{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.18);color:var(--text);align-self:flex-end;border-bottom-left-radius:3px;}
+.chat-msg.ai{background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.15);color:var(--text);align-self:flex-start;border-bottom-right-radius:3px;}
+.chat-msg.ai strong{color:var(--purple);}
+.chat-input-row{display:flex;gap:8px;}
+#chat-input{flex:1;background:#050810;border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border .2s;}
+#chat-input:focus{border-color:var(--purple);}
+#chat-input::placeholder{color:var(--muted);}
+#chat-send-btn{background:var(--purple);color:#000;border:none;border-radius:10px;padding:9px 16px;font-weight:900;cursor:pointer;font-family:var(--sans);font-size:12px;transition:filter .2s;white-space:nowrap;}
+#chat-send-btn:hover{filter:brightness(1.15);}
+#chat-send-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── LOG ── */
+#log-section{margin:0 12px 6px;background:#020406;border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+#log-header{padding:7px 13px;border-bottom:1px solid var(--border);font-size:10px;font-family:var(--mono);color:var(--muted);display:flex;align-items:center;gap:7px;}
+.log-dot{width:8px;height:8px;border-radius:50%;}
+#log-body{padding:9px 13px;font-family:var(--mono);font-size:10px;line-height:1.9;overflow-y:auto;max-height:155px;}
+.log-line{display:flex;gap:8px;align-items:flex-start;}
+.log-ts{color:#1e3a5f;flex-shrink:0;}
+.log-info{color:#4a6280;}
+.log-ok{color:var(--green);}
+.log-warn{color:var(--yellow);}
+.log-err{color:var(--red);}
+.log-ai{color:var(--blue);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:4px;}
+.dc-blue{--dcolor:var(--blue);--drgb:56,189,248;}
+.dc-green{--dcolor:var(--green);--drgb:74,222,128;}
+.dc-yellow{--dcolor:var(--yellow);--drgb:251,191,36;}
+.dc-purple{--dcolor:var(--purple);--drgb:167,139,250;}
+.dc-pink{--dcolor:var(--pink);--drgb:244,114,182;}
+.dc-orange{--dcolor:var(--orange);--drgb:251,146,60;}
+.dc-teal{--dcolor:#2dd4bf;--drgb:45,212,191;}
+
+/* ── ADMIN ── */
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;}
+.stat-icon{font-size:26px;width:50px;height:50px;background:rgba(56,189,248,.05);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.stat-info .stat-val{font-size:22px;font-weight:900;font-family:var(--mono);}
+.stat-info .stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.admin-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;}
+.admin-section h3{font-size:13px;font-weight:900;margin-bottom:12px;color:var(--purple);border-bottom:1px solid var(--border);padding-bottom:8px;}
+.log-table{width:100%;border-collapse:collapse;text-align:right;font-size:12px;}
+.log-table th{color:var(--muted);padding:8px;border-bottom:1px solid var(--border);}
+.log-table td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.02);}
+
+/* ── SAVED REPORTS PAGE (NEW) ── */
+.page-inner{padding:16px;}
+.page-title{font-size:16px;font-weight:900;margin-bottom:4px;}
+.page-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:18px;}
+#saved-reports-list{display:flex;flex-direction:column;gap:10px;}
+.saved-report-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;transition:border .2s;}
+.saved-report-card:hover{border-color:var(--border2);}
+.src-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.src-icon{font-size:20px;flex-shrink:0;}
+.src-title{font-size:13px;font-weight:700;flex:1;line-height:1.3;}
+.src-meta{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.src-preview{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.src-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.src-btn{padding:5px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--sans);font-weight:700;transition:all .2s;}
+.src-btn:hover{border-color:var(--blue);color:var(--blue);}
+.src-btn.del{color:var(--red);}
+.src-btn.del:hover{border-color:var(--red);background:rgba(248,113,113,.06);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state .es-icon{font-size:48px;margin-bottom:12px;display:block;opacity:.5;}
+.empty-state .es-title{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text);}
+.empty-state .es-sub{font-size:12px;line-height:1.6;}
+
+/* ── COMPARE PAGE (NEW) ── */
+#compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+.compare-slot{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.compare-slot-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.02);}
+.compare-slot-title{font-size:11px;font-weight:700;flex:1;}
+.compare-slot-body{padding:12px;font-size:11px;color:var(--muted);line-height:1.7;max-height:380px;overflow-y:auto;}
+.compare-select{background:#050810;border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--sans);font-size:11px;outline:none;width:100%;margin-top:8px;}
+
+/* ── PROFILE PAGE (NEW) ── */
+.profile-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+.profile-section h3{font-size:13px;font-weight:900;margin-bottom:14px;color:var(--blue);display:flex;align-items:center;gap:8px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px;}
+.profile-name{font-size:18px;font-weight:900;}
+.profile-email{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.profile-role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-top:8px;}
+.profile-role-badge.admin{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
+.profile-role-badge.user{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);color:var(--blue);}
+.profile-field{margin-bottom:12px;}
+.profile-field label{display:block;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;}
+.profile-input{width:100%;background:#050810;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border .2s;}
+.profile-input:focus{border-color:var(--blue);}
+.profile-input::placeholder{color:var(--muted);}
+.profile-save-btn{background:var(--blue);color:#000;border:none;border-radius:10px;padding:9px 20px;font-weight:900;cursor:pointer;font-family:var(--sans);font-size:13px;transition:filter .2s;}
+.profile-save-btn:hover{filter:brightness(1.12);}
+.keys-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.key-card{background:#050810;border:1px solid var(--border);border-radius:10px;padding:12px;}
+.key-card-label{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.key-card-input{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;}
+.key-card-input::placeholder{color:var(--muted);}
+
+/* ── MODAL (NEW) ── */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.modal-title{font-size:15px;font-weight:900;margin-bottom:6px;}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+.modal-field{margin-bottom:12px;}
+.modal-field label{display:block;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;}
+.modal-input{width:100%;background:#050810;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border .2s;}
+.modal-input:focus{border-color:var(--blue);}
+.modal-input::placeholder{color:var(--muted);}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.modal-btn{flex:1;padding:10px;border-radius:10px;font-weight:900;cursor:pointer;font-family:var(--sans);font-size:13px;transition:filter .2s;border:none;}
+.modal-btn.primary{background:var(--blue);color:#000;}
+.modal-btn.primary:hover{filter:brightness(1.12);}
+.modal-btn.secondary{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);}
+.modal-btn.secondary:hover{color:var(--text);}
+.modal-btn:disabled{opacity:.4;cursor:not-allowed;}
+.share-link-box{background:#050810;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin:10px 0;direction:ltr;text-align:left;}
+.copy-success{color:var(--green);font-size:11px;text-align:center;margin-top:6px;display:none;}
+
+/* ── COMING SOON ── */
+.coming-soon-page{padding:40px 20px;text-align:center;}
+.coming-soon-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(244,114,182,.08);border:1px solid rgba(244,114,182,.25);border-radius:20px;padding:6px 16px;font-size:11px;color:var(--pink);font-family:var(--mono);margin-bottom:28px;}
+.coming-soon-icon{font-size:64px;margin-bottom:20px;display:block;opacity:.7;}
+.coming-soon-title{font-size:22px;font-weight:900;color:var(--text);margin-bottom:10px;}
+.coming-soon-sub{font-size:13px;color:var(--muted);line-height:1.7;max-width:340px;margin:0 auto 28px;}
+.coming-soon-features{display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto;}
+.cs-feature{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;text-align:right;}
+.cs-feature-icon{font-size:18px;flex-shrink:0;}
+.cs-feature-text{font-size:12px;color:var(--muted);}
+.cs-feature-text strong{color:var(--text);display:block;margin-bottom:2px;}
+.progress-coming{width:100%;height:4px;background:rgba(244,114,182,.1);border-radius:4px;margin-top:24px;overflow:hidden;}
+.progress-coming-fill{width:35%;height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:4px;animation:glow-scan 2.5s ease-in-out infinite;}
+@keyframes glow-scan{0%,100%{opacity:.5;}50%{opacity:1;}}
+
+/* ── HELP BOT ── */
+#help-bot-btn{position:fixed;bottom:20px;left:20px;z-index:500;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;cursor:pointer;font-size:22px;box-shadow:0 4px 20px rgba(56,189,248,.35);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#help-bot-btn:hover{transform:scale(1.1);}
+#help-bot-btn .bot-badge{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:var(--green);border-radius:50%;border:2px solid var(--bg);animation:blink 2s infinite;}
+#help-bot-panel{position:fixed;bottom:82px;left:20px;z-index:499;width:310px;background:var(--card);border:1px solid var(--border2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden;max-height:480px;}
+#help-bot-panel.open{display:flex;}
+#bot-panel-header{padding:12px 14px;background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(167,139,250,.06));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+#bot-panel-header .bot-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.bot-name{font-size:13px;font-weight:900;}
+.bot-status{font-size:9px;color:var(--green);font-family:var(--mono);}
+#bot-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;margin-right:auto;padding:2px 6px;}
+#bot-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:180px;}
+.bot-msg{padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.6;}
+.bot-msg.bot{background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.14);color:var(--text);align-self:flex-start;border-bottom-right-radius:3px;max-width:85%;}
+.bot-msg.user{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.16);color:var(--text);align-self:flex-end;border-bottom-left-radius:3px;max-width:85%;}
+.bot-quick-btns{padding:8px 12px;display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid var(--border);}
+.bot-quick-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--sans);transition:all .2s;}
+.bot-quick-btn:hover{border-color:var(--blue);color:var(--blue);}
+#bot-input-row{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:7px;}
+#bot-input{flex:1;background:#050810;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;}
+#bot-input:focus{border-color:var(--blue);}
+#bot-input::placeholder{color:var(--muted);}
+#bot-send{background:var(--blue);color:#000;border:none;border-radius:8px;padding:7px 13px;font-weight:900;cursor:pointer;font-size:12px;font-family:var(--sans);transition:filter .2s;}
+#bot-send:hover{filter:brightness(1.15);}
+#bot-send:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── FOOTER ── */
+.site-footer{text-align:center;padding:14px;font-size:10px;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--border);margin:6px 12px 18px;border-radius:8px;background:rgba(255,255,255,.01);}
+.site-footer span{color:var(--blue);}
+
+/* ── NOTIFICATION TOAST ── */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:10px 18px;font-size:12px;font-weight:700;display:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap;}
+#toast.show{display:block;animation:toast-in .3s ease;}
+@keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(-10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- ════════ TOAST ════════ -->
+<div id="toast"></div>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="atab-login" onclick="switchAuthTab('login')">تسجيل الدخول</div>
+      <div class="auth-tab" id="atab-register" onclick="switchAuthTab('register')">حساب جديد</div>
+    </div>
+    <div id="auth-login">
+      <h2>⚡ أهلاً بك في Nexus AI</h2>
+      <p class="sub">Nexus AI — Multi-Provider AI</p>
+      <div class="login-field"><label>البريد الإلكتروني أو اسم المستخدم</label><input type="text" id="login-email" placeholder="admin أو email@example.com" autocomplete="username"></div>
+      <div class="login-field"><label>كلمة المرور</label>
+        <div style="position:relative"><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:#050810;border:1px solid var(--border);border-radius:10px;padding:11px 14px;padding-left:36px;color:var(--text);outline:none;font-size:14px;"><button class="key-eye" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)" onclick="togglePass('login-pass')">👁</button></div>
+      </div>
+      <button class="login-btn" onclick="handleLogin()">دخول النظام →</button>
+      <div id="login-error" style="color:var(--red);font-size:12px;margin-top:10px;display:none"></div>
+    </div>
+    <div id="auth-register" style="display:none">
+      <h2>✨ إنشاء حساب</h2>
+      <p class="sub">سجّل بإيميلك وكلمة سر من اختيارك</p>
+      <div class="login-field"><label>الاسم الكامل</label><input type="text" id="reg-name" placeholder="محمد أحمد"></div>
+      <div class="login-field"><label>البريد الإلكتروني</label><input type="email" id="reg-email" placeholder="email@example.com" autocomplete="email"></div>
+      <div class="login-field"><label>كلمة المرور (6 أحرف على الأقل)</label>
+        <div style="position:relative"><input type="password" id="reg-pass" placeholder="••••••••" style="width:100%;background:#050810;border:1px solid var(--border);border-radius:10px;padding:11px 14px;padding-left:36px;color:var(--text);outline:none;font-size:14px;"><button class="key-eye" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)" onclick="togglePass('reg-pass')">👁</button></div>
+      </div>
+      <div class="login-field"><label>تأكيد كلمة المرور</label>
+        <div style="position:relative"><input type="password" id="reg-pass2" placeholder="••••••••" style="width:100%;background:#050810;border:1px solid var(--border);border-radius:10px;padding:11px 14px;padding-left:36px;color:var(--text);outline:none;font-size:14px;"><button class="key-eye" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)" onclick="togglePass('reg-pass2')">👁</button></div>
+      </div>
+      <button class="login-btn" style="background:var(--purple)" onclick="handleRegister()">إنشاء الحساب ✦</button>
+      <div id="register-error" style="color:var(--red);font-size:12px;margin-top:10px;display:none"></div>
+      <div id="register-ok" style="color:var(--green);font-size:12px;margin-top:10px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ NAV ════════ -->
+<div class="nav-tabs">
+  <div class="nav-tab active" id="tab-main"    onclick="switchPage('main')">🤖 Nexus Control</div>
+  <div class="nav-tab"        id="tab-reports" onclick="switchPage('reports')">💾 تقاريري</div>
+  <div class="nav-tab"        id="tab-compare" onclick="switchPage('compare')">📊 مقارنة</div>
+  <div class="nav-tab"        id="tab-profile" onclick="switchPage('profile')">👤 ملفي</div>
+  <div class="nav-tab"        id="tab-admin"   onclick="switchPage('admin')">📋 Admin</div>
+  <div class="nav-tab locked" id="tab-social"  onclick="showComingSoon()">📱 سوشيل 🔒</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN PAGE
+════════════════════════════════════════ -->
+<div id="main-page" class="app-page active">
+  <div id="header">
+    <div class="logo">🏢</div>
+    <div><div class="header-title">Nexus AI</div><div class="header-sub">multi-agent · <span id="header-provider-name">openai</span></div></div>
+    <div class="call-badge" id="call-counter">0 calls</div>
+    <div id="user-badge" onclick="handleLogout()">👤 تسجيل خروج</div>
+    <div class="status-dot"></div>
+  </div>
+
+  <div id="provider-section">
+    <div class="provider-row" id="provider-pills"></div>
+    <div class="mk-row">
+      <div class="mk-group" id="model-select-wrap">
+        <div class="mini-label">MODEL</div>
+        <select id="model-select" class="model-select"></select>
+      </div>
+      <div class="mk-group grow">
+        <div class="mini-label">API_KEY</div>
+        <div class="key-wrap">
+          <input id="api-key" type="password" placeholder="sk-proj-...">
+          <button class="key-eye" onclick="toggleKeyVisibility()">👁</button>
+        </div>
+      </div>
+    </div>
+    <div id="custom-fields">
+      <div><div class="mini-label">ENDPOINT_URL</div><input id="custom-endpoint" class="custom-input" placeholder="https://api.yourprovider.com/v1/chat/completions"></div>
+      <div><div class="mini-label">MODEL_NAME</div><input id="custom-model-name" class="custom-input" placeholder="model-name-here"></div>
+      <div>
+        <div class="mini-label" style="margin-bottom:5px">REQUEST_FORMAT</div>
+        <div class="format-row" id="format-btns">
+          <div class="fmt-btn active" data-fmt="openai" onclick="selectFormat(this)">OpenAI Compatible</div>
+          <div class="fmt-btn" data-fmt="google" onclick="selectFormat(this)">Google Gemini</div>
+          <div class="fmt-btn" data-fmt="anthropic" onclick="selectFormat(this)">Anthropic Claude</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="provider-note" id="provider-note">
+    <div class="provider-note-left"><span>⚡</span><span>8 طلبات فقط · <span id="note-model">gpt-4o-mini</span></span></div>
+    <span id="note-hint">platform.openai.com</span>
+  </div>
+
+  <div id="task-section">
+    <div id="task-header"><span>📋</span><span class="label">TASK_INPUT</span></div>
+    <textarea id="task-input" placeholder="اكتب المهمة للشركة... مثال: نريد إطلاق تطبيق موبايل جديد&#10;&#10;Ctrl+Enter للتشغيل السريع" maxlength="3500"></textarea>
+    <div id="task-char-counter">0 / 3500</div>
+    <div id="task-footer">
+      <div class="dept-toggles" id="dept-toggles"></div>
+      <button id="run-btn" onclick="runSystem()">▶ تشغيل</button>
+    </div>
+  </div>
+
+  <div id="progress-bar-wrap"><div id="progress-bar-fill"></div></div>
+
+  <div id="flow-section">
+    <div class="flow-title">// AGENT_FLOW</div>
+    <div id="orch-node">
+      <div class="node-icon">🤖</div>
+      <div><div class="node-name">Nexus Orchestrator</div><div class="node-role">orchestrator · nexus brain</div></div>
+      <div class="node-status ns-idle" id="orch-status">idle</div>
+    </div>
+    <div class="connector"></div>
+    <div id="depts-grid"></div>
+    <div class="connector" style="transform:scaleY(-1);margin-top:-6px;margin-bottom:12px;"></div>
+  </div>
+
+  <!-- REPORT -->
+  <div id="report-section">
+    <div id="report-header">
+      <span>📊</span>
+      <span style="font-size:13px;font-weight:700;">التقرير النهائي</span>
+      <span class="badge">COMPLETE</span>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div id="report-actions">
+      <button class="action-btn pdf-btn"     onclick="downloadPDF()">📥 PDF</button>
+      <button class="action-btn print-btn"   onclick="printReport()">🖨️ طباعة</button>
+      <button class="action-btn email-btn"   onclick="openEmailModal()">📧 إيميل</button>
+      <button class="action-btn save-btn"    id="save-report-btn" onclick="saveCurrentReport()">💾 حفظ</button>
+      <button class="action-btn share-btn"   onclick="shareReport()">🔗 مشاركة</button>
+      <button class="action-btn compare-btn" onclick="switchPage('compare')">📊 مقارنة</button>
+    </div>
+
+    <div id="report-body"></div>
+
+    <div id="report-chat">
+      <div class="chat-title">دردشة التعديل — اطلب أي تغيير في التقرير</div>
+      <div id="chat-messages">
+        <div class="chat-msg ai">👋 مرحباً! التقرير جاهز. هل تريد تعديل شيء؟ مثلاً: <strong>«أضف توصيات للتسويق»</strong> أو <strong>«اجعل الخطة أكثر تفصيلاً»</strong></div>
+      </div>
+      <div class="chat-input-row">
+        <input id="chat-input" placeholder="اطلب تعديلاً على التقرير..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+        <button id="chat-send-btn" onclick="sendChatMsg()">إرسال ✦</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="log-section">
+    <div id="log-header">
+      <div class="log-dot" style="background:#ef4444"></div>
+      <div class="log-dot" style="background:#fbbf24"></div>
+      <div class="log-dot" style="background:#4ade80"></div>
+      <span style="margin-right:8px;">nexus.log</span>
+    </div>
+    <div id="log-body"></div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SAVED REPORTS PAGE
+════════════════════════════════════════ -->
+<div id="reports-page" class="app-page">
+  <div id="header">
+    <div class="logo" style="background:linear-gradient(135deg,var(--yellow),var(--orange));">💾</div>
+    <div><div class="header-title">تقاريري المحفوظة</div><div class="header-sub">nexus vault · local storage</div></div>
+  </div>
+  <div class="page-inner">
+    <div class="page-title">📂 التقارير المحفوظة</div>
+    <div class="page-sub">كل تقاريرك محفوظة على جهازك · <span id="reports-count">0</span> تقرير</div>
+    <div id="saved-reports-list">
+      <div class="empty-state">
+        <span class="es-icon">📭</span>
+        <div class="es-title">لا توجد تقارير محفوظة</div>
+        <div class="es-sub">شغّل النظام وبعد اكتمال التقرير اضغط على زر «💾 حفظ» لحفظه هنا</div>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     COMPARE PAGE
+════════════════════════════════════════ -->
+<div id="compare-page" class="app-page">
+  <div id="header">
+    <div class="logo" style="background:linear-gradient(135deg,var(--orange),var(--red));">📊</div>
+    <div><div class="header-title">Nexus Compare</div><div class="header-sub">nexus compare · side-by-side</div></div>
+  </div>
+  <div class="page-inner">
+    <div class="page-title">📊 مقارنة تقريرين</div>
+    <div class="page-sub">اختر تقريرين من المحفوظات وقارن بينهما جنباً إلى جنب</div>
+    <div id="compare-grid">
+      <div class="compare-slot">
+        <div class="compare-slot-header">
+          <span style="color:var(--blue)">●</span>
+          <div class="compare-slot-title">التقرير الأول</div>
+        </div>
+        <div style="padding:12px;border-bottom:1px solid var(--border);">
+          <select class="compare-select" id="compare-select-1" onchange="loadCompareSlot(1)">
+            <option value="">-- اختر تقريراً --</option>
+          </select>
+        </div>
+        <div class="compare-slot-body" id="compare-body-1"><div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">اختر تقريراً من القائمة</div></div>
+      </div>
+      <div class="compare-slot">
+        <div class="compare-slot-header">
+          <span style="color:var(--orange)">●</span>
+          <div class="compare-slot-title">التقرير الثاني</div>
+        </div>
+        <div style="padding:12px;border-bottom:1px solid var(--border);">
+          <select class="compare-select" id="compare-select-2" onchange="loadCompareSlot(2)">
+            <option value="">-- اختر تقريراً --</option>
+          </select>
+        </div>
+        <div class="compare-slot-body" id="compare-body-2"><div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">اختر تقريراً من القائمة</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PROFILE PAGE
+════════════════════════════════════════ -->
+<div id="profile-page" class="app-page">
+  <div id="header">
+    <div class="logo" style="background:linear-gradient(135deg,var(--green),var(--blue));">👤</div>
+    <div><div class="header-title">Nexus Profile</div><div class="header-sub">nexus profile · settings · keys</div></div>
+  </div>
+  <div class="page-inner">
+    <div class="profile-section">
+      <h3>👤 معلومات الحساب</h3>
+      <div class="profile-avatar" id="profile-avatar">👤</div>
+      <div class="profile-name" id="profile-name">—</div>
+      <div class="profile-email" id="profile-email">—</div>
+      <div id="profile-role-badge" class="profile-role-badge user">مستخدم عادي</div>
+    </div>
+
+    <div class="profile-section">
+      <h3>🔑 مفاتيح API المحفوظة</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:14px;">تُحفظ مفاتيحك تلقائياً في المتصفح — لا تُرسل لأي خادم</p>
+      <div class="keys-grid" id="profile-keys-grid"></div>
+      <button class="profile-save-btn" style="margin-top:14px" onclick="saveProfileKeys()">💾 حفظ المفاتيح</button>
+    </div>
+
+    <div class="profile-section">
+      <h3>📧 إعدادات الإيميل (EmailJS)</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:14px;">للإرسال عبر الإيميل، أنشئ حساب مجاني على <a href="https://emailjs.com" target="_blank" style="color:var(--blue)">emailjs.com</a></p>
+      <div class="profile-field"><label>SERVICE_ID</label><input class="profile-input" id="ejs-service" placeholder="service_xxxxxxx"></div>
+      <div class="profile-field"><label>TEMPLATE_ID</label><input class="profile-input" id="ejs-template" placeholder="template_xxxxxxx"></div>
+      <div class="profile-field"><label>PUBLIC_KEY</label><input class="profile-input" id="ejs-pubkey" placeholder="xxxxxxxxxxxxxxx"></div>
+      <button class="profile-save-btn" style="background:var(--green)" onclick="saveEmailJSConfig()">💾 حفظ إعدادات الإيميل</button>
+    </div>
+
+    <div class="profile-section">
+      <h3>📊 إحصائياتي</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="stat-card"><div class="stat-icon" style="font-size:20px">⚡</div><div class="stat-info"><div class="stat-val" id="my-runs">0</div><div class="stat-lbl">مرات التشغيل</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="font-size:20px">💾</div><div class="stat-info"><div class="stat-val" id="my-saved">0</div><div class="stat-lbl">تقارير محفوظة</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ADMIN PAGE
+════════════════════════════════════════ -->
+<div id="admin-page" class="app-page">
+  <div id="header">
+    <div class="logo" style="background:linear-gradient(135deg,var(--purple),var(--pink));">📋</div>
+    <div><div class="header-title">Nexus Admin</div><div class="header-sub">nexus admin · real-time analytics</div></div>
+  </div>
+  <div style="padding:14px;">
+    <div class="admin-grid">
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-info"><div class="stat-val" id="stat-total-runs">0</div><div class="stat-lbl">مرات التشغيل</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--green)">✅</div><div class="stat-info"><div class="stat-val" id="stat-api-calls">0</div><div class="stat-lbl">طلبات ناجحة</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--blue)">🏢</div><div class="stat-info"><div class="stat-val" id="stat-active-depts">7</div><div class="stat-lbl">أقسام مفعّلة</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--yellow)">🔌</div><div class="stat-info"><div class="stat-val" id="stat-provider" style="font-size:14px;color:var(--green)">OpenAI</div><div class="stat-lbl">المزود النشط</div></div></div>
+    </div>
+    <div class="admin-section">
+      <h3>👥 إدارة المستخدمين</h3>
+      <table class="users-table">
+        <thead><tr><th>الاسم</th><th>البريد</th><th>النوع</th><th>إجراء</th></tr></thead>
+        <tbody id="admin-users-rows"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:14px">لا يوجد مستخدمون مسجّلون بعد.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="admin-section">
+      <h3>📋 سجل العمليات</h3>
+      <table class="log-table">
+        <thead><tr><th>الوقت</th><th>الحدث</th><th>الحالة</th></tr></thead>
+        <tbody id="admin-log-rows"><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:18px;">لا توجد عمليات بعد.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SOCIAL PAGE
+════════════════════════════════════════ -->
+<div id="social-page" class="app-page">
+  <div id="header">
+    <div class="logo" style="background:linear-gradient(135deg,var(--pink),var(--orange));">📱</div>
+    <div><div class="header-title">Nexus Social</div><div class="header-sub">social media management · soon</div></div>
+  </div>
+  <div class="coming-soon-page">
+    <div class="coming-soon-badge">🔒 قريباً — Coming Soon</div>
+    <span class="coming-soon-icon">📱</span>
+    <div class="coming-soon-title">قسم Nexus Social</div>
+    <div class="coming-soon-sub">نعمل بجد على تطوير قسم متكامل لإدارة منصات التواصل الاجتماعي بالذكاء الاصطناعي.</div>
+    <div class="coming-soon-features">
+      <div class="cs-feature"><span class="cs-feature-icon">✍️</span><div class="cs-feature-text"><strong>توليد محتوى ذكي</strong>نصوص وتعليقات مدعومة بـ AI</div></div>
+      <div class="cs-feature"><span class="cs-feature-icon">📅</span><div class="cs-feature-text"><strong>جدولة المنشورات</strong>إدارة خطة النشر بالكامل</div></div>
+      <div class="cs-feature"><span class="cs-feature-icon">📊</span><div class="cs-feature-text"><strong>تحليل التفاعل</strong>إحصائيات وتقارير مفصّلة</div></div>
+      <div class="cs-feature"><span class="cs-feature-icon">💬</span><div class="cs-feature-text"><strong>الرد التلقائي</strong>AI يرد على التعليقات والرسائل</div></div>
+    </div>
+    <div class="progress-coming"><div class="progress-coming-fill"></div></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono)">نسبة الإنجاز: 35%</div>
+  </div>
+  <div class="site-footer">جميع الحقوق محفوظة لدى <span>الشناوي مصطفى</span> © 2025</div>
+</div>
+
+<!-- ════════ HELP BOT ════════ -->
+<button id="help-bot-btn" onclick="toggleBot()">🤖<span class="bot-badge"></span></button>
+<div id="help-bot-panel">
+  <div id="bot-panel-header">
+    <div class="bot-avatar">🤖</div>
+    <div><div class="bot-name">Nexus Bot</div><div class="bot-status">● متصل الآن</div></div>
+    <button id="bot-close" onclick="toggleBot()">✕</button>
+  </div>
+  <div id="bot-messages"><div class="bot-msg bot">مرحباً! 👋 أنا هنا أساعدك في تشغيل النظام واختيار النماذج. اسألني عن أي شيء!</div></div>
+  <div class="bot-quick-btns">
+    <div class="bot-quick-btn" onclick="botQuick('كيف أشغّل النظام؟')">كيف أشغّل؟</div>
+    <div class="bot-quick-btn" onclick="botQuick('كيف أحفظ التقرير؟')">حفظ التقرير</div>
+    <div class="bot-quick-btn" onclick="botQuick('كيف أرسل التقرير بالإيميل؟')">إرسال إيميل</div>
+    <div class="bot-quick-btn" onclick="botQuick('أي مزود أنصحني؟')">أي مزود؟</div>
+  </div>
+  <div id="bot-input-row">
+    <input id="bot-input" placeholder="اسألني..." onkeydown="if(event.key==='Enter')sendBotMsg()">
+    <button id="bot-send" onclick="sendBotMsg()">إرسال</button>
+  </div>
+</div>
+
+<!-- ════════ EMAIL MODAL ════════ -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal-box">
+    <div class="modal-title">📧 إرسال التقرير بالإيميل</div>
+    <div class="modal-sub">أدخل عنوان البريد الإلكتروني لإرسال التقرير إليه</div>
+    <div class="modal-field"><label>البريد الإلكتروني للمستلم</label><input class="modal-input" id="email-to" type="email" placeholder="example@company.com"></div>
+    <div class="modal-field"><label>موضوع الإيميل</label><input class="modal-input" id="email-subject" value="تقرير Nexus AI"></div>
+    <div id="email-status" style="font-size:11px;color:var(--muted);margin-top:8px;display:none;text-align:center;"></div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeModal('email-modal')">إلغاء</button>
+      <button class="modal-btn primary" id="email-send-btn" onclick="sendEmail()">📨 إرسال</button>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:center;">يتطلب إعداد EmailJS في صفحة «ملفي» · أو سيُفتح تطبيق الإيميل</div>
+  </div>
+</div>
+
+<!-- ════════ SHARE MODAL ════════ -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal-box">
+    <div class="modal-title">🔗 مشاركة التقرير</div>
+    <div class="modal-sub">انسخ الرابط وشاركه مع أي شخص — لا يحتاج حساباً للمشاهدة</div>
+    <div class="share-link-box" id="share-link-box">جارٍ التوليد...</div>
+    <div class="copy-success" id="copy-success">✅ تم النسخ!</div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeModal('share-modal')">إغلاق</button>
+      <button class="modal-btn primary" onclick="copyShareLink()">📋 نسخ الرابط</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   SECURITY: HTML SANITIZER (Safe-3)
+═══════════════════════════════════════ */
+function sanitizeHTML(html){
+  const div=document.createElement('div');
+  div.innerHTML=html;
+  // Remove any script tags or event attributes
+  div.querySelectorAll('script,iframe,object,embed').forEach(el=>el.remove());
+  div.querySelectorAll('*').forEach(el=>{
+    [...el.attributes].forEach(attr=>{
+      if(/^on/i.test(attr.name)||attr.name==='href'&&/^javascript:/i.test(attr.value)){
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+  return div.innerHTML;
+}
+
+/* ═══════════════════════════════════════
+   PROVIDERS CONFIG
+═══════════════════════════════════════ */
+const PROVIDERS = {
+  openai:    { name:'OpenAI',         icon:'🟢', colorHex:'#10b981', colorRgb:'16,185,129',  models:[{id:'gpt-4o-mini',label:'GPT-4o Mini ⭐'},{id:'gpt-4o',label:'GPT-4o'},{id:'gpt-3.5-turbo',label:'GPT-3.5 Turbo'}], default:'gpt-4o-mini', endpoint:'https://api.openai.com/v1/chat/completions', format:'openai', keyPlaceholder:'sk-proj-...', keyHint:'platform.openai.com' },
+  deepseek:  { name:'DeepSeek',       icon:'🔵', colorHex:'#38bdf8', colorRgb:'56,189,248',  models:[{id:'deepseek-chat',label:'DeepSeek Chat ⭐'},{id:'deepseek-reasoner',label:'DeepSeek Reasoner'}], default:'deepseek-chat', endpoint:'https://api.deepseek.com/v1/chat/completions', format:'openai', keyPlaceholder:'sk-...', keyHint:'platform.deepseek.com' },
+  google:    { name:'Google Gemini',  icon:'🔴', colorHex:'#4285f4', colorRgb:'66,133,244',  models:[{id:'gemini-1.5-flash',label:'Gemini 1.5 Flash ⭐'},{id:'gemini-1.5-pro',label:'Gemini 1.5 Pro'}], default:'gemini-1.5-flash', endpoint:'https://generativelanguage.googleapis.com/v1beta/models', format:'google', keyPlaceholder:'AIza...', keyHint:'aistudio.google.com' },
+  anthropic: { name:'Claude',         icon:'🟠', colorHex:'#f97316', colorRgb:'249,115,22',  models:[{id:'claude-haiku-4-5-20251001',label:'Claude Haiku ⭐'},{id:'claude-sonnet-4-6',label:'Claude Sonnet'},{id:'claude-opus-4-6',label:'Claude Opus'}], default:'claude-haiku-4-5-20251001', endpoint:'https://api.anthropic.com/v1/messages', format:'anthropic', keyPlaceholder:'sk-ant-...', keyHint:'console.anthropic.com' },
+  groq:      { name:'Groq',           icon:'⚡', colorHex:'#f59e0b', colorRgb:'245,158,11',  models:[{id:'llama-3.3-70b-versatile',label:'Llama 3.3 70B ⭐'},{id:'llama-3.1-8b-instant',label:'Llama 3.1 8B'},{id:'mixtral-8x7b-32768',label:'Mixtral 8x7B'}], default:'llama-3.3-70b-versatile', endpoint:'https://api.groq.com/openai/v1/chat/completions', format:'openai', keyPlaceholder:'gsk_...', keyHint:'console.groq.com (مجاني!)' },
+  custom:    { name:'Custom',         icon:'⚙️', colorHex:'#a78bfa', colorRgb:'167,139,250', models:[], default:'', endpoint:'', format:'openai', keyPlaceholder:'API Key...', keyHint:'أي مزود OpenAI-compatible' }
+};
+
+let activeProvider = 'openai';
+let customFormat   = 'openai';
+
+/* ═══════════════════════════════════════
+   COMPANY STRUCTURE — مع قسم بناء التطبيقات
+═══════════════════════════════════════ */
+const COMPANY = [
+  { id:'engineering', icon:'⚙️', title:'الهندسة والتطوير',    color:'dc-blue',   role:'CTO',
+    agents:[{id:'arch',name:'مهندس المعمارية',role:'system design'},{id:'backend',name:'مطور Backend',role:'APIs & databases'},{id:'frontend',name:'مطور Frontend',role:'UI/UX'},{id:'mobile',name:'مطور Mobile',role:'iOS & Android'},{id:'devops',name:'مهندس DevOps',role:'CI/CD & infra'},{id:'qa',name:'مهندس الجودة',role:'testing & QA'}] },
+  { id:'product',     icon:'🎯', title:'إدارة المنتج',         color:'dc-purple',  role:'CPO',
+    agents:[{id:'pm',name:'مدير المنتج',role:'roadmap & OKRs'},{id:'ux',name:'مصمم UX',role:'user research'},{id:'analyst',name:'محلل البيانات',role:'metrics & KPIs'},{id:'strategy',name:'محلل الاستراتيجية',role:'market positioning'},{id:'growth',name:'مدير النمو',role:'acquisition & retention'},{id:'research',name:'باحث السوق',role:'market trends'}] },
+  { id:'marketing',   icon:'📣', title:'التسويق والمحتوى',     color:'dc-pink',    role:'CMO',
+    agents:[{id:'content',name:'كاتب المحتوى',role:'blog & copy'},{id:'social',name:'مدير السوشيال',role:'social strategy'},{id:'seo',name:'خبير SEO',role:'search optimization'},{id:'ads',name:'مدير الإعلانات',role:'paid campaigns'},{id:'brand',name:'مدير العلامة',role:'brand identity'},{id:'pr',name:'مختص العلاقات',role:'press & events'}] },
+  { id:'sales',       icon:'💰', title:'المبيعات والعملاء',    color:'dc-green',   role:'CSO',
+    agents:[{id:'leads',name:'مولّد العملاء',role:'lead generation'},{id:'demos',name:'خبير العروض',role:'product demos'},{id:'pricing',name:'محلل التسعير',role:'pricing strategy'},{id:'support',name:'دعم العملاء',role:'customer success'},{id:'crm',name:'مدير CRM',role:'pipeline management'},{id:'partner',name:'مدير الشراكات',role:'B2B deals'}] },
+  { id:'hr',          icon:'👥', title:'الموارد البشرية',      color:'dc-yellow',  role:'CHRO',
+    agents:[{id:'recruit',name:'مسؤول التوظيف',role:'talent acquisition'},{id:'training',name:'مدير التدريب',role:'learning & dev'},{id:'culture',name:'مدير الثقافة',role:'employee experience'},{id:'payroll',name:'مسؤول الرواتب',role:'compensation'},{id:'legal-hr',name:'مستشار قانوني',role:'HR compliance'},{id:'wellness',name:'مدير الرفاهية',role:'employee wellness'}] },
+  { id:'finance',     icon:'📊', title:'المالية والمحاسبة',    color:'dc-orange',  role:'CFO',
+    agents:[{id:'accounting',name:'المحاسب الرئيسي',role:'bookkeeping'},{id:'budget',name:'محلل الميزانية',role:'budget planning'},{id:'audit',name:'مراجع الحسابات',role:'internal audit'},{id:'tax',name:'مستشار الضرائب',role:'tax strategy'},{id:'invest',name:'محلل الاستثمار',role:'investment analysis'},{id:'risk',name:'مدير المخاطر',role:'risk management'}] },
+  { id:'appbuilder',  icon:'🛠️', title:'بناء التطبيقات',       color:'dc-teal',    role:'CTO Apps',
+    agents:[{id:'ui-designer',name:'مصمم الواجهات',role:'UI/UX & Figma'},{id:'react-dev',name:'مطور React/Vue',role:'frontend frameworks'},{id:'fullstack-dev',name:'مطور Fullstack',role:'frontend & backend'},{id:'db-architect',name:'مهندس قواعد البيانات',role:'SQL & NoSQL'},{id:'api-builder',name:'مطور APIs',role:'REST & GraphQL'},{id:'deploy-eng',name:'مهندس النشر',role:'hosting & domain'}] },
+];
+
+/* ═══════════════════════════════════════
+   AUTH SYSTEM
+═══════════════════════════════════════ */
+const ADMIN_USER = "admin", ADMIN_PASS = "admin123";
+let currentUser = null;
+let stats = { totalRuns:0, apiCalls:0, history:[] };
+
+function getUsers(){ try{ return JSON.parse(localStorage.getItem('sysUsers')||'[]'); }catch(e){ return []; } }
+function saveUsers(u){ localStorage.setItem('sysUsers', JSON.stringify(u)); }
+function hashPass(p){ let h=0; for(let i=0;i<p.length;i++){h=(h<<5)-h+p.charCodeAt(i);h|=0;} return h.toString(36); }
+function showAuthError(id,msg){ const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',4000); }
+function showAuthOk(id,msg){ const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+function togglePass(id){ const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
+
+function switchAuthTab(tab){
+  document.getElementById('auth-login').style.display    = tab==='login'    ? 'block':'none';
+  document.getElementById('auth-register').style.display = tab==='register' ? 'block':'none';
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('atab-'+tab).classList.add('active');
+}
+
+function handleLogin(){
+  const raw=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(raw===ADMIN_USER && pass===ADMIN_PASS){ currentUser={name:'المسؤول',email:'admin',role:'admin'}; enterSystem(); return; }
+  const users=getUsers();
+  const found=users.find(u=>u.email.toLowerCase()===raw.toLowerCase());
+  if(!found){ showAuthError('login-error','❌ البريد الإلكتروني غير مسجّل'); return; }
+  if(found.passHash!==hashPass(pass)){ showAuthError('login-error','❌ كلمة المرور غير صحيحة'); return; }
+  currentUser={name:found.name,email:found.email,role:'user'};
+  enterSystem();
+}
+
+function handleRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+  if(!name)               { showAuthError('register-error','❌ أدخل اسمك الكامل'); return; }
+  if(!email.includes('@')) { showAuthError('register-error','❌ البريد غير صحيح'); return; }
+  if(pass.length<6)        { showAuthError('register-error','❌ كلمة المرور 6 أحرف على الأقل'); return; }
+  if(pass!==pass2)         { showAuthError('register-error','❌ كلمتا المرور غير متطابقتين'); return; }
+  const users=getUsers();
+  if(users.find(u=>u.email===email)){ showAuthError('register-error','❌ هذا البريد مسجّل مسبقاً'); return; }
+  users.push({name,email,passHash:hashPass(pass),joinedAt:new Date().toLocaleDateString('ar')});
+  saveUsers(users);
+  showAuthOk('register-ok','✅ تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.');
+  setTimeout(()=>switchAuthTab('login'),1800);
+}
+
+function enterSystem(){
+  document.getElementById('login-screen').style.display='none';
+  const badge=document.getElementById('user-badge');
+  if(currentUser.role==='admin'){ badge.textContent='👑 '+currentUser.name+' · خروج'; badge.classList.add('is-admin'); }
+  else { badge.textContent='👤 '+currentUser.name+' · خروج'; badge.classList.remove('is-admin'); }
+  document.getElementById('tab-admin').style.display = currentUser.role==='admin' ? '' : 'none';
+  loadProfileData();
+  loadSavedKeys();
+  addAdminLog(`دخول: ${currentUser.name} (${currentUser.role})`,'SUCCESS');
+  applyPendingSharedReport();
+}
+
+function handleLogout(){
+  if(!confirm('هل تريد تسجيل الخروج؟')) return;
+  currentUser=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+  switchAuthTab('login');
+}
+
+/* ═══════════════════════════════════════
+   PAGE NAVIGATION
+═══════════════════════════════════════ */
+function switchPage(page){
+  // Safe-5: Block unauthorized admin access
+  if(page==='admin' && (!currentUser || currentUser.role!=='admin')){
+    showToast('⛔ غير مصرح لك بالدخول إلى لوحة المسؤول','var(--red)');
+    return;
+  }
+  document.querySelectorAll('.app-page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  const map={main:'main-page',reports:'reports-page',compare:'compare-page',profile:'profile-page',admin:'admin-page',social:'social-page'};
+  const tabs={main:'tab-main',reports:'tab-reports',compare:'tab-compare',profile:'tab-profile',admin:'tab-admin',social:'tab-social'};
+  if(map[page]) document.getElementById(map[page]).classList.add('active');
+  if(tabs[page]) document.getElementById(tabs[page]).classList.add('active');
+  if(page==='admin')   updateAdminUI();
+  if(page==='reports') renderSavedReports();
+  if(page==='compare') renderCompareSelects();
+  if(page==='profile') updateProfileStats();
+}
+function showComingSoon(){ switchPage('social'); }
+
+/* ═══════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════ */
+function addAdminLog(action,status){
+  const ts=new Date().toLocaleTimeString('ar',{hour12:false});
+  stats.history.unshift({time:ts,action,status});
+  if(stats.history.length>12) stats.history.pop();
+}
+function updateAdminUI(){
+  document.getElementById('stat-total-runs').textContent = stats.totalRuns;
+  document.getElementById('stat-api-calls').textContent  = stats.apiCalls;
+  document.getElementById('stat-active-depts').textContent = activeDepts.size;
+  document.getElementById('stat-provider').textContent   = PROVIDERS[activeProvider].name;
+  const users=getUsers();
+  const utbody=document.getElementById('admin-users-rows');
+  utbody.innerHTML = users.length===0
+    ? '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:14px">لا يوجد مستخدمون.</td></tr>'
+    : users.map((u,i)=>`<tr><td>${u.name}</td><td style="font-family:var(--mono);color:var(--muted)">${u.email}</td><td style="color:var(--blue)">مستخدم</td><td><button class="del-user-btn" onclick="deleteUser(${i})">حذف</button></td></tr>`).join('');
+  const tbody=document.getElementById('admin-log-rows');
+  tbody.innerHTML = stats.history.length===0
+    ? '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:18px;">لا توجد عمليات.</td></tr>'
+    : stats.history.map(r=>`<tr><td style="font-family:var(--mono);color:var(--muted)">${r.time}</td><td>${r.action}</td><td style="color:${r.status==='SUCCESS'?'var(--green)':r.status==='RUNNING'?'var(--yellow)':'var(--red)'}">${r.status}</td></tr>`).join('');
+}
+function deleteUser(idx){ const users=getUsers(); if(!confirm(`حذف "${users[idx].name}"?`)) return; users.splice(idx,1); saveUsers(users); updateAdminUI(); }
+
+/* ═══════════════════════════════════════
+   PROVIDER UI
+═══════════════════════════════════════ */
+function buildProviderUI(){
+  const row=document.getElementById('provider-pills');
+  Object.entries(PROVIDERS).forEach(([id,p])=>{
+    const pill=document.createElement('div');
+    pill.className='provider-pill'+(id===activeProvider?' active':'');
+    pill.id=`pill-${id}`;
+    pill.style.setProperty('--pcolor',p.colorHex);
+    pill.style.setProperty('--prgb',p.colorRgb);
+    pill.innerHTML=`<span class="ppill-icon">${p.icon}</span><span>${p.name}</span>`;
+    pill.onclick=()=>selectProvider(id);
+    row.appendChild(pill);
+  });
+  refreshProviderUI();
+}
+function selectProvider(id){
+  activeProvider=id;
+  document.querySelectorAll('.provider-pill').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`pill-${id}`).classList.add('active');
+  document.getElementById('provider-section').style.borderColor=PROVIDERS[id].colorHex+'55';
+  refreshProviderUI();
+  // load saved key for this provider
+  const saved=getSavedKeys();
+  if(saved[id]) document.getElementById('api-key').value=saved[id];
+  else document.getElementById('api-key').value='';
+}
+function refreshProviderUI(){
+  const p=PROVIDERS[activeProvider];
+  if(activeProvider==='custom'){
+    document.getElementById('custom-fields').style.display='flex';
+    document.getElementById('model-select-wrap').style.display='none';
+  } else {
+    document.getElementById('custom-fields').style.display='none';
+    document.getElementById('model-select-wrap').style.display='flex';
+    const sel=document.getElementById('model-select');
+    sel.innerHTML='';
+    p.models.forEach(m=>{ const opt=document.createElement('option'); opt.value=m.id; opt.textContent=m.label; if(m.id===p.default)opt.selected=true; sel.appendChild(opt); });
+    document.getElementById('note-model').textContent=p.default;
+    sel.onchange=()=>document.getElementById('note-model').textContent=sel.value;
+  }
+  document.getElementById('api-key').placeholder=p.keyPlaceholder;
+  document.getElementById('note-hint').textContent=p.keyHint;
+  document.getElementById('header-provider-name').textContent=p.name.toLowerCase();
+}
+function selectFormat(btn){ document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); customFormat=btn.dataset.fmt; }
+function toggleKeyVisibility(){ const i=document.getElementById('api-key'); i.type=i.type==='password'?'text':'password'; }
+
+/* ═══════════════════════════════════════
+   DEPT TOGGLES
+═══════════════════════════════════════ */
+let activeDepts = new Set(COMPANY.map(d=>d.id));
+const DEPT_COLORS={ 'dc-blue':'#38bdf8','dc-green':'#4ade80','dc-yellow':'#fbbf24','dc-purple':'#a78bfa','dc-pink':'#f472b6','dc-orange':'#fb923c','dc-teal':'#2dd4bf' };
+
+function buildDeptToggles(){
+  const wrap=document.getElementById('dept-toggles');
+  COMPANY.forEach(d=>{
+    const c=DEPT_COLORS[d.color]||'#888';
+    const tag=document.createElement('div');
+    tag.className='dept-tag on';
+    tag.textContent=d.icon+' '+d.title;
+    tag.style.cssText=`color:${c};border-color:${c};background:${c}18;`;
+    tag.onclick=()=>{ if(activeDepts.has(d.id)){activeDepts.delete(d.id);tag.classList.remove('on');tag.style.opacity='.35';}else{activeDepts.add(d.id);tag.classList.add('on');tag.style.opacity='1';} };
+    wrap.appendChild(tag);
+  });
+}
+
+function buildDeptsGrid(){
+  const grid=document.getElementById('depts-grid');
+  grid.innerHTML='';
+  COMPANY.forEach(d=>{
+    const c=DEPT_COLORS[d.color]||'#888';
+    const node=document.createElement('div');
+    node.className=`dept-node ${d.color}`;
+    node.id=`dept-${d.id}`;
+    node.innerHTML=`
+      <div class="dept-top">
+        <span class="dept-icon">${d.icon}</span>
+        <span class="dept-title">${d.title}</span>
+        <span class="dept-status ns-idle" id="ds-${d.id}" style="color:var(--muted);border-color:var(--muted)">idle</span>
+      </div>
+      <div class="sub-agents" id="sa-list-${d.id}">
+        ${d.agents.map(a=>`<div class="sub-agent" id="sa-${d.id}-${a.id}"><div class="sa-dot"></div><div><div class="sa-name">${a.name}</div><div class="sa-out" id="out-${d.id}-${a.id}"></div></div></div>`).join('')}
+      </div>`;
+    grid.appendChild(node);
+  });
+}
+
+/* ═══════════════════════════════════════
+   API CALL
+═══════════════════════════════════════ */
+let callCount=0;
+async function callAI(messages, systemPrompt=''){
+  const key   = document.getElementById('api-key').value.trim();
+  const model = activeProvider==='custom' ? document.getElementById('custom-model-name').value.trim() : document.getElementById('model-select').value;
+  if(!key){ addLog('❌ لا يوجد API Key','log-err'); return null; }
+  const fmt = activeProvider==='custom' ? customFormat : PROVIDERS[activeProvider].format;
+  let endpoint, headers, body;
+  if(fmt==='google'){
+    endpoint=`${PROVIDERS.google.endpoint}/${model}:generateContent?key=${key}`;
+    headers={'Content-Type':'application/json'};
+    const googleBody={contents:[{parts:[{text:messages.map(m=>m.content).join('\n')}]}]};
+    if(systemPrompt) googleBody.systemInstruction={parts:[{text:systemPrompt}]};
+    body=JSON.stringify(googleBody);
+  } else if(fmt==='anthropic'){
+    endpoint=PROVIDERS.anthropic.endpoint;
+    headers={'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+    const anthropicBody={model,max_tokens:2000,messages};
+    if(systemPrompt) anthropicBody.system=systemPrompt;
+    body=JSON.stringify(anthropicBody);
+  } else {
+    endpoint=activeProvider==='custom' ? document.getElementById('custom-endpoint').value.trim() : PROVIDERS[activeProvider].endpoint;
+    headers={'Content-Type':'application/json','Authorization':'Bearer '+key};
+    const msgs=systemPrompt ? [{role:'system',content:systemPrompt},...messages] : messages;
+    body=JSON.stringify({model,messages:msgs,max_tokens:2000});
+  }
+  try{
+    let res, lastErr;
+    for(let attempt=0; attempt<3; attempt++){
+      try{
+        res = await fetch(endpoint,{method:'POST',headers,body});
+        break;
+      } catch(fetchErr){
+        lastErr=fetchErr;
+        if(attempt<2){ addLog(`⚠️ خطأ في الشبكة، إعادة المحاولة ${attempt+2}/3...`,'log-warn'); await new Promise(r=>setTimeout(r,1200*(attempt+1))); }
+      }
+    }
+    if(!res) throw lastErr;
+    if(!res.ok){ const e=await res.json(); addLog(`API Error: ${e.error?.message||res.status}`,'log-err'); return null; }
+    const data=await res.json();
+    callCount++;
+    stats.apiCalls++;
+    document.getElementById('call-counter').textContent=callCount+' calls';
+    if(fmt==='google') return data.candidates?.[0]?.content?.parts?.[0]?.text||null;
+    if(fmt==='anthropic') return data.content?.[0]?.text||null;
+    return data.choices?.[0]?.message?.content||null;
+  } catch(e){ addLog('Network error: '+e.message,'log-err'); return null; }
+}
+
+/* ═══════════════════════════════════════
+   LOG
+═══════════════════════════════════════ */
+function addLog(msg,cls='log-info'){
+  const ts=new Date().toLocaleTimeString('ar',{hour12:false});
+  const body=document.getElementById('log-body');
+  const line=document.createElement('div');
+  line.className='log-line';
+  line.innerHTML=`<span class="log-ts">${ts}</span><span class="${cls}">${msg}</span>`;
+  body.appendChild(line);
+  body.scrollTop=body.scrollHeight;
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function showToast(msg, color='var(--green)'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.color=color; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ═══════════════════════════════════════
+   RUN SYSTEM
+═══════════════════════════════════════ */
+let lastReportHTML='';
+let lastReportText='';
+let lastTaskName='';
+
+async function runSystem(){
+  const task=document.getElementById('task-input').value.trim();
+  if(!task){ showToast('❌ أدخل المهمة أولاً','var(--red)'); return; }
+  const depts=COMPANY.filter(d=>activeDepts.has(d.id));
+  if(!depts.length){ showToast('❌ فعّل قسماً واحداً على الأقل','var(--red)'); return; }
+
+  const btn=document.getElementById('run-btn');
+  btn.disabled=true; btn.textContent='⏳ جارٍ التشغيل...';
+  document.getElementById('report-section').classList.remove('show');
+  document.getElementById('progress-bar-wrap').style.display='block';
+  document.getElementById('progress-bar-fill').style.width='0%';
+  lastTaskName=task;
+
+  stats.totalRuns++;
+  addAdminLog(`تشغيل: ${task.substring(0,40)}...`,'RUNNING');
+  addLog('🚀 بدء تشغيل النظام متعدد الوكلاء','log-info');
+
+  // Orchestrator
+  setOrchStatus('think');
+  addLog('🤖 المدير التنفيذي يحلل المهمة...','log-ai');
+  const orchPrompt=`أنت مدير تنفيذي لشركة كبيرة. المهمة: "${task}". قم بتحليل المهمة وتوزيع العمل على الأقسام: ${depts.map(d=>d.title).join('، ')}. رد بالعربية بإيجاز في سطرين.`;
+  const orchOut=await callAI([{role:'user',content:orchPrompt}]);
+  if(!orchOut){ setOrchStatus('error'); btn.disabled=false; btn.textContent='▶ تشغيل'; return; }
+  addLog('✅ المدير: '+orchOut.substring(0,80)+'...','log-ok');
+  setOrchStatus('done');
+
+  const totalSteps=depts.reduce((s,d)=>s+d.agents.length,0);
+  let doneSteps=0;
+
+  // Run departments
+  for(let di=0;di<depts.length;di++){
+    const dept=depts[di];
+    setDeptStatus(dept.id,'think');
+    addLog(`🏢 ${dept.title} بدأ العمل...`,'log-ai');
+    for(let ai=0;ai<dept.agents.length;ai++){
+      const agent=dept.agents[ai];
+      setSAStatus(dept.id, agent.id,'running');
+      const prompt=`أنت ${agent.name} في شركة. دورك: ${agent.role}. المهمة الكبرى: "${task}". قدّم مساهمتك المتخصصة بـ 2-3 نقاط مختصرة باللغة العربية.`;
+      const out=await callAI([{role:'user',content:prompt}]);
+      const text=out||'تم الإنجاز بنجاح.';
+      setSADone(dept.id, agent.id,text.substring(0,120));
+      doneSteps++;
+      document.getElementById('progress-bar-fill').style.width=(doneSteps/totalSteps*85)+'%';
+      await sleep(200);
+    }
+    setDeptStatus(dept.id,'done');
+  }
+
+  // Final report
+  addLog('📊 توليد التقرير النهائي...','log-ai');
+  const summaryPrompt=`أنت مدير تنفيذي. المهمة: "${task}". قدّم تقريراً شاملاً ومنظماً بالعربية يتضمن:
+1. ملخص تنفيذي
+2. خطة العمل لكل قسم: ${depts.map(d=>d.title).join('، ')}
+3. الجدول الزمني المقترح
+4. الموارد المطلوبة
+5. مؤشرات النجاح
+اجعل التقرير احترافياً ومفصّلاً.`;
+  const finalReport=await callAI([{role:'user',content:summaryPrompt}]);
+
+  document.getElementById('progress-bar-fill').style.width='100%';
+  setTimeout(()=>document.getElementById('progress-bar-wrap').style.display='none',800);
+
+  if(finalReport){
+    lastReportText=finalReport;
+    lastReportHTML=markdownToHTML(finalReport);
+    document.getElementById('report-body').innerHTML=sanitizeHTML(lastReportHTML);
+    document.getElementById('report-section').classList.add('show');
+    document.getElementById('save-report-btn').classList.remove('saved-indicator');
+    document.getElementById('save-report-btn').textContent='💾 حفظ';
+    addLog('✅ التقرير النهائي جاهز!','log-ok');
+    addAdminLog(`اكتمل: ${task.substring(0,40)}...`,'SUCCESS');
+    showToast('✅ التقرير جاهز!');
+  }
+
+  setOrchStatus('done');
+  btn.disabled=false; btn.textContent='▶ تشغيل';
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function setOrchStatus(s){
+  const el=document.getElementById('orch-status');
+  el.className='node-status';
+  if(s==='think'){ el.classList.add('ns-think'); el.textContent='thinking...'; }
+  else if(s==='done'){ el.classList.add('ns-done'); el.textContent='done ✓'; }
+  else if(s==='error'){ el.classList.add('ns-error'); el.textContent='error'; }
+  else { el.classList.add('ns-idle'); el.textContent='idle'; }
+}
+function setDeptStatus(id,s){
+  const el=document.getElementById(`ds-${id}`);
+  const node=document.getElementById(`dept-${id}`);
+  if(!el) return;
+  el.className='dept-status';
+  if(s==='think'){ el.classList.add('ns-think'); el.textContent='working...'; node.classList.add('active-dept'); }
+  else if(s==='done'){ el.classList.add('ns-done'); el.textContent='done ✓'; node.classList.remove('active-dept'); }
+  else { el.classList.add('ns-idle'); el.textContent='idle'; }
+}
+function setSAStatus(deptId,agentId,s){ const el=document.getElementById(`sa-${deptId}-${agentId}`); if(el){ el.classList.remove('done'); if(s==='running') el.classList.add('running'); else el.classList.remove('running'); } }
+function setSADone(deptId,agentId,text){ const el=document.getElementById(`sa-${deptId}-${agentId}`); if(!el) return; el.classList.remove('running'); el.classList.add('done'); const out=document.getElementById(`out-${deptId}-${agentId}`); if(out) out.textContent=text; }
+
+function markdownToHTML(text){
+  // Process line by line to correctly handle list boundaries
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+  lines.forEach(rawLine => {
+    const line = rawLine
+      .replace(/^### (.+)$/, '<h3>$1</h3>')
+      .replace(/^## (.+)$/, '<h3>$1</h3>')
+      .replace(/^# (.+)$/, '<h3>$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    const isBullet = /^[-•*] (.+)$/.test(rawLine);
+    if(isBullet){
+      const content = rawLine.replace(/^[-•*] /, '').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      if(!inList){ html += '<ul>'; inList=true; }
+      html += `<li>${content}</li>`;
+    } else {
+      if(inList){ html += '</ul>'; inList=false; }
+      if(!rawLine.trim()){ html += ''; }
+      else { html += line + '\n'; }
+    }
+  });
+  if(inList) html += '</ul>';
+  return html.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+}
+
+/* ═══════════════════════════════════════
+   REPORT CHAT
+═══════════════════════════════════════ */
+async function sendChatMsg(){
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();
+  if(!msg||!lastReportText) return;
+  input.value='';
+  appendChatMsg(msg,'user');
+  document.getElementById('chat-send-btn').disabled=true;
+  const prompt=`التقرير الحالي:\n${lastReportText}\n\nطلب التعديل: ${msg}\n\nقدّم التقرير المعدّل كاملاً بالعربية.`;
+  const res=await callAI([{role:'user',content:prompt}]);
+  if(res){
+    lastReportText=res;
+    lastReportHTML=markdownToHTML(res);
+    document.getElementById('report-body').innerHTML=sanitizeHTML(lastReportHTML);
+    appendChatMsg('✅ تم التعديل! راجع التقرير أعلاه.','ai');
+    document.getElementById('save-report-btn').classList.remove('saved-indicator');
+    document.getElementById('save-report-btn').textContent='💾 حفظ';
+  } else {
+    appendChatMsg('❌ حدث خطأ، حاول مجدداً.','ai');
+  }
+  document.getElementById('chat-send-btn').disabled=false;
+}
+function appendChatMsg(msg,role){
+  const div=document.createElement('div');
+  div.className=`chat-msg ${role}`;
+  div.innerHTML=msg;
+  const box=document.getElementById('chat-messages');
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
+/* ═══════════════════════════════════════
+   PDF DOWNLOAD
+═══════════════════════════════════════ */
+async function downloadPDF(){
+  if(!lastReportText){ showToast('❌ لا يوجد تقرير بعد','var(--red)'); return; }
+  showToast('⏳ جارٍ توليد PDF...');
+
+  // Create a styled container that mirrors the report, then screenshot it
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;color:#111;font-family:Cairo,sans-serif;font-size:14px;line-height:1.9;padding:40px;direction:rtl;text-align:right;';
+  container.innerHTML = `
+    <div style="background:#38bdf8;color:#000;padding:12px 20px;font-size:16px;font-weight:900;border-radius:8px;margin-bottom:20px;">
+      📊 Smart Company System — التقرير النهائي
+    </div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:20px;">المهمة: ${lastTaskName} &nbsp;·&nbsp; التاريخ: ${new Date().toLocaleDateString('ar-SA')}</div>
+    <hr style="border:0;border-top:1px solid #e2e8f0;margin-bottom:20px;">
+    <div id="_pdf_body">${lastReportHTML}</div>`;
+
+  // Style h3 elements inside
+  const style = document.createElement('style');
+  style.textContent = '#_pdf_body h3{color:#1d4ed8;font-size:14px;font-weight:900;margin:16px 0 6px;border-right:3px solid #38bdf8;padding-right:8px;} #_pdf_body ul{padding-right:20px;} #_pdf_body li{margin-bottom:4px;} #_pdf_body strong{color:#0f172a;}';
+  container.appendChild(style);
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+    document.body.removeChild(container);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const imgW = pageW;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    let yPos = 0;
+    while(yPos < imgH){
+      if(yPos > 0) doc.addPage();
+      doc.addImage(imgData,'JPEG',0,-yPos,imgW,imgH);
+      yPos += pageH;
+    }
+    doc.save(`${lastTaskName||'nexus-report'}.pdf`);
+    showToast('✅ تم تحميل PDF!');
+  } catch(err){
+    if(document.body.contains(container)) document.body.removeChild(container);
+    showToast('❌ فشل توليد PDF','var(--red)');
+  }
+}
+
+/* ═══════════════════════════════════════
+   PRINT
+═══════════════════════════════════════ */
+function printReport(){
+  if(!lastReportText){ showToast('❌ لا يوجد تقرير بعد','var(--red)'); return; }
+  window.print();
+  addLog('🖨️ طباعة التقرير','log-ok');
+}
+
+/* ═══════════════════════════════════════
+   EMAIL
+═══════════════════════════════════════ */
+function openEmailModal(){
+  if(!lastReportText){ showToast('❌ لا يوجد تقرير بعد','var(--red)'); return; }
+  document.getElementById('email-modal').classList.add('open');
+  document.getElementById('email-status').style.display='none';
+  document.getElementById('email-subject').value=`تقرير: ${lastTaskName.substring(0,40)}`;
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+async function sendEmail(){
+  const to=document.getElementById('email-to').value.trim();
+  const subject=document.getElementById('email-subject').value.trim();
+  if(!to||!to.includes('@')){ showToast('❌ أدخل بريداً صحيحاً','var(--red)'); return; }
+
+  const statusEl=document.getElementById('email-status');
+  const sendBtn=document.getElementById('email-send-btn');
+  statusEl.style.display='block';
+  sendBtn.disabled=true;
+
+  // Try EmailJS first
+  const cfg=getEmailJSConfig();
+  if(cfg.serviceId && cfg.templateId && cfg.pubKey){
+    statusEl.textContent='📨 جارٍ الإرسال عبر EmailJS...';
+    try{
+      emailjs.init(cfg.pubKey);
+      await emailjs.send(cfg.serviceId, cfg.templateId, {
+        to_email: to,
+        subject:  subject,
+        message:  lastReportText,
+        task_name: lastTaskName,
+        from_name: 'Nexus AI',
+        date: new Date().toLocaleDateString('ar')
+      });
+      statusEl.textContent='✅ تم الإرسال بنجاح!';
+      statusEl.style.color='var(--green)';
+      showToast('✅ تم إرسال التقرير بالإيميل!');
+      addLog('📧 تم الإرسال بالإيميل إلى '+to,'log-ok');
+      addAdminLog('إرسال إيميل إلى '+to,'SUCCESS');
+      setTimeout(()=>closeModal('email-modal'),2000);
+    } catch(e){
+      statusEl.textContent='❌ خطأ: '+e.text;
+      statusEl.style.color='var(--red)';
+    }
+  } else {
+    // Fallback: open mailto
+    statusEl.textContent='⚠️ EmailJS غير مُهيّأ — سيُفتح تطبيق الإيميل...';
+    const body=encodeURIComponent(lastReportText.substring(0,2000));
+    const sub=encodeURIComponent(subject);
+    window.open(`mailto:${to}?subject=${sub}&body=${body}`,'_blank');
+    setTimeout(()=>{
+      statusEl.textContent='✅ فُتح تطبيق الإيميل. لإرسال مباشر، أعدّ EmailJS في صفحة ملفي.';
+      statusEl.style.color='var(--yellow)';
+    },500);
+  }
+  sendBtn.disabled=false;
+}
+
+/* ═══════════════════════════════════════
+   SAVE REPORT
+═══════════════════════════════════════ */
+function getSavedReports(){ try{ return JSON.parse(localStorage.getItem('savedReports')||'[]'); }catch(e){return[];} }
+function setSavedReports(r){ localStorage.setItem('savedReports',JSON.stringify(r)); }
+
+function saveCurrentReport(){
+  if(!lastReportText){ showToast('❌ لا يوجد تقرير بعد','var(--red)'); return; }
+  // Safe-2: Check localStorage capacity before saving
+  try{
+    const testKey='_nexus_size_test';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+  } catch(e){
+    showToast('⚠️ الذاكرة ممتلئة! يرجى حذف بعض التقارير القديمة أولاً','var(--yellow)');
+    return;
+  }
+  const reports=getSavedReports();
+  const id=Date.now();
+  reports.unshift({
+    id, title:lastTaskName||'تقرير '+new Date().toLocaleDateString('ar'),
+    date:new Date().toLocaleDateString('ar'), time:new Date().toLocaleTimeString('ar',{hour12:false}),
+    text:lastReportText, html:lastReportHTML, provider:PROVIDERS[activeProvider].name
+  });
+  if(reports.length>20) reports.pop();
+  setSavedReports(reports);
+  const btn=document.getElementById('save-report-btn');
+  btn.classList.add('saved-indicator');
+  btn.textContent='✅ محفوظ';
+  showToast('✅ تم حفظ التقرير!');
+  addLog('💾 تم حفظ التقرير','log-ok');
+}
+
+function renderSavedReports(){
+  const reports=getSavedReports();
+  document.getElementById('reports-count').textContent=reports.length;
+  const list=document.getElementById('saved-reports-list');
+  if(!reports.length){
+    list.innerHTML='<div class="empty-state"><span class="es-icon">📭</span><div class="es-title">لا توجد تقارير محفوظة</div><div class="es-sub">شغّل النظام وبعد اكتمال التقرير اضغط «💾 حفظ»</div></div>';
+    return;
+  }
+  list.innerHTML=reports.map(r=>`
+    <div class="saved-report-card">
+      <div class="src-top">
+        <div class="src-icon">📊</div>
+        <div>
+          <div class="src-title">${r.title}</div>
+          <div class="src-meta">${r.date} · ${r.time} · ${r.provider||'—'}</div>
+        </div>
+      </div>
+      <div class="src-preview">${r.text.substring(0,150)}...</div>
+      <div class="src-actions">
+        <button class="src-btn" onclick="viewSavedReport(${r.id})">👁 عرض</button>
+        <button class="src-btn" onclick="exportSavedPDF(${r.id})">📥 PDF</button>
+        <button class="src-btn" onclick="loadSavedForCompare(${r.id})">📊 مقارنة</button>
+        <button class="src-btn del" onclick="deleteSavedReport(${r.id})">🗑 حذف</button>
+      </div>
+    </div>`).join('');
+}
+
+function viewSavedReport(id){
+  const r=getSavedReports().find(x=>x.id===id);
+  if(!r) return;
+  lastReportText=r.text; lastReportHTML=r.html||markdownToHTML(r.text); lastTaskName=r.title;
+  document.getElementById('report-body').innerHTML=lastReportHTML;
+  document.getElementById('report-section').classList.add('show');
+  document.getElementById('save-report-btn').classList.add('saved-indicator');
+  document.getElementById('save-report-btn').textContent='✅ محفوظ';
+  switchPage('main');
+  setTimeout(()=>document.getElementById('report-section').scrollIntoView({behavior:'smooth'}),300);
+}
+
+function exportSavedPDF(id){
+  const r=getSavedReports().find(x=>x.id===id);
+  if(!r) return;
+  const div=document.createElement('div');
+  div.innerHTML=r.html||markdownToHTML(r.text);
+  div.style.cssText='color:#000;font-family:Arial,sans-serif;padding:10px;';
+  document.body.appendChild(div);
+  html2pdf().set({margin:10,filename:`${r.title}.pdf`,html2canvas:{scale:2,backgroundColor:'#fff'},jsPDF:{unit:'mm',format:'a4'}}).from(div).save().then(()=>document.body.removeChild(div));
+  showToast('✅ تم تحميل PDF!');
+}
+
+function deleteSavedReport(id){
+  if(!confirm('هل تريد حذف هذا التقرير؟')) return;
+  const reports=getSavedReports().filter(x=>x.id!==id);
+  setSavedReports(reports);
+  renderSavedReports();
+  showToast('🗑 تم الحذف','var(--muted)');
+}
+
+/* ═══════════════════════════════════════
+   COMPARE
+═══════════════════════════════════════ */
+function renderCompareSelects(){
+  const reports=getSavedReports();
+  [1,2].forEach(n=>{
+    const sel=document.getElementById(`compare-select-${n}`);
+    const val=sel.value;
+    sel.innerHTML='<option value="">-- اختر تقريراً --</option>';
+    reports.forEach(r=>{ const opt=document.createElement('option'); opt.value=r.id; opt.textContent=r.title+' ('+r.date+')'; if(r.id==val) opt.selected=true; sel.appendChild(opt); });
+  });
+}
+function loadCompareSlot(n){
+  const id=document.getElementById(`compare-select-${n}`).value;
+  const body=document.getElementById(`compare-body-${n}`);
+  if(!id){ body.innerHTML='<div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">اختر تقريراً من القائمة</div>'; return; }
+  const r=getSavedReports().find(x=>x.id==id);
+  if(r) body.innerHTML=`<div style="font-size:11px;line-height:1.8;color:var(--text)">${r.html||markdownToHTML(r.text)}</div>`;
+}
+function loadSavedForCompare(id){
+  switchPage('compare');
+  renderCompareSelects();
+  const sel=document.getElementById('compare-select-1');
+  sel.value=id;
+  loadCompareSlot(1);
+}
+
+/* ═══════════════════════════════════════
+   SHARE REPORT
+═══════════════════════════════════════ */
+function shareReport(){
+  if(!lastReportText){ showToast('❌ لا يوجد تقرير بعد','var(--red)'); return; }
+  try{
+    const encoded=btoa(encodeURIComponent(lastReportText.substring(0,2000)));
+    const url=`${window.location.href.split('?')[0]}?report=${encoded}&title=${encodeURIComponent(lastTaskName)}`;
+    document.getElementById('share-link-box').textContent=url;
+    document.getElementById('copy-success').style.display='none';
+    document.getElementById('share-modal').classList.add('open');
+  } catch(e){ showToast('❌ خطأ في توليد الرابط','var(--red)'); }
+}
+function copyShareLink(){
+  const text=document.getElementById('share-link-box').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copy-success').style.display='block';
+    showToast('✅ تم نسخ الرابط!');
+  }).catch(()=>{ document.execCommand('selectAll'); document.execCommand('copy'); });
+}
+
+/* ═══════════════════════════════════════
+   PROFILE & KEYS
+═══════════════════════════════════════ */
+function getSavedKeys(){ try{ return JSON.parse(localStorage.getItem('savedKeys')||'{}'); }catch(e){return{};} }
+function getEmailJSConfig(){ try{ return JSON.parse(localStorage.getItem('emailJSConfig')||'{}'); }catch(e){return{};} }
+
+function loadProfileData(){
+  if(!currentUser) return;
+  document.getElementById('profile-name').textContent=currentUser.name;
+  document.getElementById('profile-email').textContent=currentUser.email;
+  const rb=document.getElementById('profile-role-badge');
+  if(currentUser.role==='admin'){ rb.textContent='👑 مسؤول'; rb.className='profile-role-badge admin'; }
+  else { rb.textContent='👤 مستخدم'; rb.className='profile-role-badge user'; }
+  // Email JS config
+  const cfg=getEmailJSConfig();
+  if(cfg.serviceId)  document.getElementById('ejs-service').value=cfg.serviceId;
+  if(cfg.templateId) document.getElementById('ejs-template').value=cfg.templateId;
+  if(cfg.pubKey)     document.getElementById('ejs-pubkey').value=cfg.pubKey;
+}
+
+function buildProfileKeysGrid(){
+  const grid=document.getElementById('profile-keys-grid');
+  const saved=getSavedKeys();
+  grid.innerHTML=Object.entries(PROVIDERS).filter(([id])=>id!=='custom').map(([id,p])=>`
+    <div class="key-card">
+      <div class="key-card-label">${p.icon} ${p.name}</div>
+      <input class="key-card-input" id="pkey-${id}" type="password" placeholder="${p.keyPlaceholder}" value="${saved[id]||''}">
+    </div>`).join('');
+}
+
+function saveProfileKeys(){
+  const keys={};
+  Object.keys(PROVIDERS).filter(id=>id!=='custom').forEach(id=>{
+    const el=document.getElementById(`pkey-${id}`);
+    if(el&&el.value) keys[id]=el.value;
+  });
+  localStorage.setItem('savedKeys',JSON.stringify(keys));
+  // Auto-load current provider key
+  const cur=keys[activeProvider];
+  if(cur) document.getElementById('api-key').value=cur;
+  showToast('✅ تم حفظ المفاتيح!');
+}
+
+function saveEmailJSConfig(){
+  const cfg={
+    serviceId:  document.getElementById('ejs-service').value.trim(),
+    templateId: document.getElementById('ejs-template').value.trim(),
+    pubKey:     document.getElementById('ejs-pubkey').value.trim()
+  };
+  localStorage.setItem('emailJSConfig',JSON.stringify(cfg));
+  showToast('✅ تم حفظ إعدادات الإيميل!');
+}
+
+function loadSavedKeys(){
+  const saved=getSavedKeys();
+  const cur=saved[activeProvider];
+  if(cur) document.getElementById('api-key').value=cur;
+  // Auto-save key on input
+  document.getElementById('api-key').addEventListener('change',()=>{
+    const keys=getSavedKeys();
+    keys[activeProvider]=document.getElementById('api-key').value;
+    localStorage.setItem('savedKeys',JSON.stringify(keys));
+  });
+}
+
+function updateProfileStats(){
+  document.getElementById('my-runs').textContent=stats.totalRuns;
+  document.getElementById('my-saved').textContent=getSavedReports().length;
+}
+
+/* ═══════════════════════════════════════
+   HELP BOT
+═══════════════════════════════════════ */
+const BOT_ANSWERS={
+  'كيف أشغّل النظام؟':'1️⃣ اختر المزود وأدخل API Key\n2️⃣ اكتب المهمة في مربع النص\n3️⃣ اضغط ▶ تشغيل\n4️⃣ انتظر التقرير النهائي!',
+  'كيف أحفظ التقرير؟':'بعد اكتمال التقرير، اضغط زر «💾 حفظ» في شريط الإجراءات. ستجد تقاريرك في تبويب «تقاريري».',
+  'كيف أرسل التقرير بالإيميل؟':'اضغط «📧 إيميل» في شريط الإجراءات. لإرسال مباشر، أعدّ EmailJS في صفحة «ملفي» أولاً.',
+  'أي مزود أنصحني؟':'للمجانية: Groq ⚡\nللدقة: OpenAI GPT-4o 🟢\nللسرعة: Claude Haiku 🟠\nللتوازن: DeepSeek 🔵',
+  'الفرق بين النماذج؟':'Mini/Flash/Haiku → سريع ورخيص\nPro/Sonnet → متوازن\nMax/Opus → الأقوى والأغلى',
+  'من أين أحصل على مفتاح API؟':'OpenAI: platform.openai.com\nClaude: console.anthropic.com\nGroq: console.groq.com (مجاني)\nGemini: aistudio.google.com (مجاني)'
+};
+function toggleBot(){ document.getElementById('help-bot-panel').classList.toggle('open'); }
+function botQuick(q){ addBotMsg(q,'user'); setTimeout(()=>{ const ans=BOT_ANSWERS[q]||'سؤال ممتاز! راجع التوثيق أو تواصل معنا.'; addBotMsg(ans,'bot'); },400); }
+async function sendBotMsg(){
+  const input=document.getElementById('bot-input');
+  const msg=input.value.trim();
+  if(!msg) return;
+  input.value='';
+  addBotMsg(msg,'user');
+  document.getElementById('bot-send').disabled=true;
+  const found=Object.entries(BOT_ANSWERS).find(([k])=>msg.includes(k.split('؟')[0]));
+  if(found){ setTimeout(()=>{ addBotMsg(found[1],'bot'); document.getElementById('bot-send').disabled=false; },500); return; }
+  const res=await callAI([{role:'user',content:msg}],'أنت مساعد ذكي لنظام إدارة شركة متعدد الوكلاء. أجب باختصار وباللغة العربية.');
+  addBotMsg(res||'عذراً، تحقق من API Key أولاً.','bot');
+  document.getElementById('bot-send').disabled=false;
+}
+function addBotMsg(msg,role){ const d=document.createElement('div'); d.className=`bot-msg ${role}`; d.textContent=msg; const box=document.getElementById('bot-messages'); box.appendChild(d); box.scrollTop=box.scrollHeight; }
+
+/* ═══════════════════════════════════════
+   CHECK SHARED REPORT IN URL
+═══════════════════════════════════════ */
+function checkSharedReport(){
+  const params=new URLSearchParams(window.location.search);
+  const encoded=params.get('report');
+  const title=params.get('title');
+  if(encoded){
+    // Store pending share data; will be shown after login
+    window._pendingSharedReport={encoded,title};
+  }
+}
+
+function applyPendingSharedReport(){
+  if(!window._pendingSharedReport) return;
+  const {encoded,title}=window._pendingSharedReport;
+  delete window._pendingSharedReport;
+  try{
+    const text=decodeURIComponent(atob(encoded));
+    lastReportText=text; lastTaskName=title||'تقرير مشترك';
+    lastReportHTML=markdownToHTML(text);
+    document.getElementById('report-body').innerHTML=sanitizeHTML(lastReportHTML);
+    document.getElementById('report-section').classList.add('show');
+  } catch(e){}
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  buildProviderUI();
+  buildDeptToggles();
+  buildDeptsGrid();
+  buildProfileKeysGrid();
+  checkSharedReport();
+  document.getElementById('login-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') handleLogin(); });
+  document.getElementById('reg-pass2').addEventListener('keydown',e=>{ if(e.key==='Enter') handleRegister(); });
+  document.getElementById('task-input').addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='Enter') runSystem(); });
+  document.getElementById('task-input').addEventListener('input',e=>{
+    const len=e.target.value.length;
+    const counter=document.getElementById('task-char-counter');
+    counter.textContent=len+' / 3500';
+    counter.style.color=len>3000?'var(--yellow)':'var(--muted)';
+  });
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+});
+</script>
+</body>
+</html>
